@@ -550,9 +550,16 @@ elif page == "💬 Email Assistant":
         _process(user_input)
 
     # Voice input — uses native st.audio_input widget (no iframe, proper mic access)
+    # The key rotates after each successful transcription so the widget resets
+    # and doesn't re-fire the same audio on the next st.rerun().
     if _sr_available:
+        if "voice_key" not in st.session_state:
+            st.session_state.voice_key = 0
         with st.expander("🎤 Voice input", expanded=False):
-            audio = st.audio_input("Tap the mic, speak, then stop recording")
+            audio = st.audio_input(
+                "Tap the mic, speak, then stop",
+                key=f"voice_{st.session_state.voice_key}",
+            )
             if audio:
                 with st.spinner("Transcribing…"):
                     try:
@@ -562,9 +569,14 @@ elif page == "💬 Email Assistant":
                             _audio_data = _rec.record(_src)
                         _text = _rec.recognize_google(_audio_data)
                         if _text.strip():
-                            _process(_text.strip())
+                            # Rotate key BEFORE processing to reset the widget
+                            st.session_state.voice_key += 1
+                            st.session_state["_pending"] = _text.strip()
+                            st.rerun()
                     except _sr.UnknownValueError:
                         st.warning("Could not understand — try again")
+                        st.session_state.voice_key += 1
+                        st.rerun()
                     except Exception as _e:
                         st.error(f"Transcription error: {_e}")
     else:

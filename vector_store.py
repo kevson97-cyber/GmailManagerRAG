@@ -133,6 +133,29 @@ class EmailVectorStore:
 
         return emails
 
+    def get_by_sender(self, sender_term: str) -> list[dict]:
+        """
+        Return all emails where the sender field contains sender_term (case-insensitive).
+        e.g. 'chess.com' matches 'noreply@chess.com', 'info@chess.com', etc.
+        """
+        if self.count() == 0:
+            return []
+        result = self._collection.get(include=["metadatas"])
+        term = sender_term.lower()
+        emails = []
+        for doc_id, meta in zip(result["ids"], result["metadatas"]):
+            if term in meta.get("sender", "").lower():
+                emails.append({
+                    "id": doc_id,
+                    "subject": meta.get("subject", ""),
+                    "sender": meta.get("sender", ""),
+                    "date": meta.get("date", ""),
+                    "snippet": meta.get("snippet", ""),
+                    "labels": meta.get("labels", "[]"),
+                    "score": 1.0,
+                })
+        return emails
+
     def get_by_label(self, label: str) -> list[dict]:
         """
         Return all emails whose stored labels JSON contains the given label string.

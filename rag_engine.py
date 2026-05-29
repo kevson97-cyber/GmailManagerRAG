@@ -245,21 +245,41 @@ Rules:
                 return label_id
         return None
 
+    @staticmethod
+    def _detect_sender(query: str) -> Optional[str]:
+        """
+        Extract a sender domain or address from the query.
+        e.g. 'delete emails from chess.com' → 'chess.com'
+             'remove emails from noreply@amazon.com' → 'noreply@amazon.com'
+        Returns the raw sender string or None.
+        """
+        m = re.search(
+            r"\bfrom\s+([\w.\-@]+\.[a-z]{2,})",
+            query,
+            flags=re.IGNORECASE,
+        )
+        return m.group(1).lower() if m else None
+
     def find_emails_for_deletion(self, query: str, n_results: int = 1500) -> list[dict]:
         """
         Find candidate emails for deletion.
 
-        1. If the query references a Gmail category (Social, Promotions, etc.),
-           use label-based metadata filtering to return ALL matching emails —
-           accurate and complete, not approximate.
-        2. Otherwise fall back to semantic similarity search, stripping the
-           delete verb so the embedding focuses on *what* to delete.
+        Priority order:
+        1. Category label match (Social, Promotions, …) → metadata filter
+        2. Sender / domain match ('from chess.com') → metadata filter
+        3. Semantic similarity search (fallback)
         """
+        # 1. Label-based
         label = self._detect_label(query)
         if label:
             return self.vs.get_by_label(label)
 
-        # Semantic fallback
+        # 2. Sender/domain-based
+        sender_term = self._detect_sender(query)
+        if sender_term:
+            return self.vs.get_by_sender(sender_term)
+
+        # 3. Semantic fallback
         clean = re.sub(
             r"\b(delete|trash|remove|get rid of|clean(?:\s+up)?|purge|"
             r"clear(?:\s+out)?|throw\s+away|discard|wipe)\b",
