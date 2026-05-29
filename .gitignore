@@ -1,0 +1,19 @@
+# Environment & secrets
+.env
+credentials/token.json
+credentials/credentials.json
+
+# Vector DB data
+chroma_db/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db

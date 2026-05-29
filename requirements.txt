@@ -1,0 +1,26 @@
+# ── Web framework ─────────────────────────────────────────────────────────────
+streamlit>=1.35.0
+
+# ── AI / LLM (local via Ollama — no API key needed) ──────────────────────────
+ollama>=0.3.0
+
+# ── Vector database ───────────────────────────────────────────────────────────
+chromadb>=0.5.0
+
+# ── Embeddings (local, no API key needed) ────────────────────────────────────
+sentence-transformers>=3.0.0
+
+# ── Google / Gmail ────────────────────────────────────────────────────────────
+google-auth>=2.29.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+google-api-python-client>=2.130.0
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── Voice transcription ───────────────────────────────────────────────────────
+SpeechRecognition>=3.10.0
+
+# ── Mobile / remote access ────────────────────────────────────────────────────
+pyngrok>=7.0.0
