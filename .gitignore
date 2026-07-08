@@ -1,19 +1,28 @@
-# Environment & secrets
-.env
-credentials/token.json
-credentials/credentials.json
+# ── Secrets ───────────────────────────────────────────────────────────────
+backend/.env
+backend/credentials/credentials.json
+backend/credentials/token.json
+frontend/.env.local
 
-# Vector DB data
-chroma_db/
+# ── Generated data ────────────────────────────────────────────────────────
+backend/chroma_db/
+*.log
 
-# Python
+# ── Python ────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
 venv/
-env/
+.pytest_cache/
 
-# OS
+# ── Node / Next.js ────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/next-env.d.ts
+
+# ── OS / editor ───────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
