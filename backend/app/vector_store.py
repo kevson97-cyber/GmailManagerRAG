@@ -9,7 +9,7 @@ from typing import Callable, Optional
 import chromadb
 from sentence_transformers import SentenceTransformer
 
-from config import CHROMA_DIR, CHROMA_COLLECTION_NAME, EMBEDDING_MODEL
+from .config import CHROMA_DIR, CHROMA_COLLECTION_NAME, EMBEDDING_MODEL
 
 
 class EmailVectorStore:
