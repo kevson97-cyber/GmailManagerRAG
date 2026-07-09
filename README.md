@@ -54,7 +54,7 @@ ollama pull qwen3:4b
 
 Add your Google OAuth client:
 
-1. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → Create OAuth client ID → **Desktop app**.
+1. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → Create OAuth client ID → **Desktop app** (simplest), or a **Web application** client with `http://localhost:8000/auth/callback` in its authorized redirect URIs — the backend supports both.
 2. Enable the **Gmail API** for the project.
 3. Download the JSON and save it as `backend/credentials/credentials.json`.
 

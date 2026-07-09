@@ -27,6 +27,7 @@ def create_app() -> FastAPI:
 
     app.include_router(status.router)
     app.include_router(gmail.router)
+    app.include_router(gmail.callback_router)  # unauthenticated /auth/callback (web OAuth)
     app.include_router(sync.router)
     app.include_router(emails.router)
     app.include_router(chat.router)
