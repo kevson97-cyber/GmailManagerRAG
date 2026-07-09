@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/*
+ * GmailManagerRAG is a single-user local tool with no light-mode use case
+ * (it's a control panel for a backend running on the user's own PC), so the
+ * shell always renders dark rather than following prefers-color-scheme.
+ */
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100 antialiased;
+}
+
+/* Firefox scrollbar to match the dark shell; Chromium/Safari inherit color-scheme: dark automatically. */
+* {
+  scrollbar-color: #334155 #0f172a;
+}
