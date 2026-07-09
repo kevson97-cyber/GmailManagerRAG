@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(npm install)",
+      "Bash(py -3 -m compileall *)",
+      "Bash(ollama list)",
+      "Bash(ollama pull *)",
+      "mcp__computer-use__screenshot"
+    ]
+  }
+}
