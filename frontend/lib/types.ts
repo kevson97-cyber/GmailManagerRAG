@@ -140,12 +140,20 @@ export interface ChatToolResultEvent {
   summary: string;
 }
 
+/** One row of tools.py's `_preview_item()` — id/subject/sender/date, no snippet. */
+export interface ChatPreviewItem {
+  id?: string;
+  subject?: string;
+  sender?: string;
+  date?: string;
+}
+
 export interface ChatConfirmEvent {
   confirm_token: string;
   action: string;
   description: string;
   count: number;
-  preview: unknown[];
+  preview: ChatPreviewItem[];
 }
 
 export type ChatFinishReason = "stop" | "awaiting_confirmation";
