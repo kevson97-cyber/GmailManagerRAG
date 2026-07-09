@@ -1,5 +1,6 @@
 # ── Secrets ───────────────────────────────────────────────────────────────
 backend/.env
+backend/.env.bak
 backend/credentials/credentials.json
 backend/credentials/token.json
 frontend/.env.local
