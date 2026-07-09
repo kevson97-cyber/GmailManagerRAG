@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "defaultMode": "bypassPermissions",
+    "defaultMode": "auto",
     "allow": [
       "Bash(git add *)",
       "Bash(git commit *)",
