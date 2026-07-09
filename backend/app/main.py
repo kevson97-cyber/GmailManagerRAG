@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import config
-from .routers import gmail, status
+from .routers import emails, gmail, status, sync
 
 
 def create_app() -> FastAPI:
@@ -27,8 +27,9 @@ def create_app() -> FastAPI:
 
     app.include_router(status.router)
     app.include_router(gmail.router)
+    app.include_router(sync.router)
+    app.include_router(emails.router)
 
-    # TODO(Phase 2): app.include_router(sync.router)   — sync job/queue + SSE progress + /api/emails
     # TODO(Phase 3): app.include_router(chat.router)   — agent engine + SSE chat + confirmation store
 
     return app

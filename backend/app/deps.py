@@ -1,6 +1,6 @@
 """
-deps.py — Process-wide singletons (GmailClient, EmailVectorStore) with lazy
-initialization guarded by locks, plus a placeholder for sync job state.
+deps.py — Process-wide singletons (GmailClient, EmailVectorStore, SyncManager)
+with lazy initialization guarded by locks.
 
 GmailClient is silently reconnected from an existing backend/credentials/token.json
 on first use (mirrors the old Streamlit app's "already logged in" experience),
@@ -17,6 +17,7 @@ from googleapiclient.discovery import build
 
 from . import config
 from .gmail_client import GmailClient
+from .sync_manager import SyncManager
 from .vector_store import EmailVectorStore
 
 # ── GmailClient singleton ─────────────────────────────────────────────────────
@@ -87,10 +88,19 @@ def get_vector_store() -> EmailVectorStore:
     return _vector_store
 
 
-# ── Sync job state (Phase 2 placeholder) ──────────────────────────────────────
-# Replaced with a real job/queue/SSE model in Phase 2. Kept here now so
-# routers can import a stable name (`deps.sync_state`) ahead of that work.
-sync_state: dict = {
-    "running": False,
-    "job_id": None,
-}
+# ── SyncManager singleton (Phase 2) ───────────────────────────────────────────
+# Constructed with the getters (not the objects themselves) so it always
+# reaches the current GmailClient/EmailVectorStore singleton, even across a
+# disconnect/reconnect that swaps out the cached GmailClient (see reset_gmail).
+_sync_lock = threading.Lock()
+_sync_manager: SyncManager | None = None
+
+
+def get_sync_manager() -> SyncManager:
+    """Return the process-wide SyncManager, creating it on first use."""
+    global _sync_manager
+    if _sync_manager is None:
+        with _sync_lock:
+            if _sync_manager is None:
+                _sync_manager = SyncManager(get_gmail, get_vector_store)
+    return _sync_manager
