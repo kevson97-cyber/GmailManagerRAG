@@ -56,10 +56,6 @@ export interface SyncStartResponse {
   job_id: string;
 }
 
-/** Matches sync_manager.py VALID_CATEGORIES — the only values the backend accepts as category:<name> terms. */
-export const SYNC_CATEGORIES = ["primary", "social", "promotions", "updates", "forums"] as const;
-export type SyncCategory = (typeof SYNC_CATEGORIES)[number];
-
 export type SyncPhase =
   | "idle"
   | "listing"
@@ -124,8 +120,6 @@ export interface ChatRequest {
 }
 
 // engine.py event contract: (event_name, data) pairs, mapped 1:1 onto SSE frames.
-export type ChatSSEEventName = "token" | "tool_call" | "tool_result" | "confirm" | "done" | "error";
-
 export interface ChatTokenEvent {
   text: string;
 }
@@ -165,12 +159,3 @@ export interface ChatDoneEvent {
 export interface ChatErrorEvent {
   message: string;
 }
-
-/** Discriminated-union helper for consumers that switch on the SSE event name. */
-export type ChatSSEEvent =
-  | { event: "token"; data: ChatTokenEvent }
-  | { event: "tool_call"; data: ChatToolCallEvent }
-  | { event: "tool_result"; data: ChatToolResultEvent }
-  | { event: "confirm"; data: ChatConfirmEvent }
-  | { event: "done"; data: ChatDoneEvent }
-  | { event: "error"; data: ChatErrorEvent };

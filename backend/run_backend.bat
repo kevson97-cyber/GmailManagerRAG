@@ -1,5 +1,5 @@
 @echo off
-REM run_backend.bat — set up the venv (if needed) and start the FastAPI backend.
+REM run_backend.bat - set up the venv (if needed) and start the FastAPI backend.
 REM Must be run from the backend\ directory (double-click or `cd backend && run_backend.bat`).
 
 cd /d "%~dp0"

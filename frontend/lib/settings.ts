@@ -9,7 +9,7 @@
 const API_URL_KEY = "gmr.apiUrl";
 const API_TOKEN_KEY = "gmr.apiToken";
 
-export const DEFAULT_API_URL = "http://localhost:8000";
+const DEFAULT_API_URL = "http://localhost:8000";
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";
@@ -45,13 +45,4 @@ export function setApiUrl(url: string): void {
 export function setApiToken(token: string): void {
   if (!isBrowser()) return;
   window.localStorage.setItem(API_TOKEN_KEY, token.trim());
-}
-
-export interface Settings {
-  apiUrl: string;
-  apiToken: string;
-}
-
-export function getSettings(): Settings {
-  return { apiUrl: getApiUrl(), apiToken: getApiToken() };
 }

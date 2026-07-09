@@ -223,11 +223,6 @@ class GmailClient:
 
     # ── Deletion ──────────────────────────────────────────────────────────────
 
-    def trash_email(self, message_id: str) -> None:
-        """Move a single message to Trash (recoverable)."""
-        self._require_auth()
-        self.service.users().messages().trash(userId="me", id=message_id).execute()
-
     def trash_emails(self, message_ids: list[str]) -> tuple[list[str], list[tuple[str, str]]]:
         """
         Move multiple messages to Trash.

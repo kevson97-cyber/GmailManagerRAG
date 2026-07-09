@@ -19,6 +19,10 @@ A local-first Gmail assistant. Your email index, Gmail credentials, and AI model
 
 ---
 
+## Quick start (after one-time setup below)
+
+Double-click **`start.bat`** in the repo root. It starts Ollama (if needed), the backend, and the frontend in their own windows, then opens the app in your browser. `start.bat tunnel` also starts the Cloudflare tunnel for phone access.
+
 ## Requirements
 
 - Windows PC (the backend runs here; macOS/Linux work too, just translate the `.bat` scripts)

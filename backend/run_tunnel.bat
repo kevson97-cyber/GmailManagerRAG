@@ -1,9 +1,9 @@
 @echo off
-REM run_tunnel.bat — expose the local backend to the internet via a free
+REM run_tunnel.bat - expose the local backend to the internet via a free
 REM Cloudflare "quick tunnel" (no account needed).
 REM
 REM Prints a https://<random>.trycloudflare.com URL. Paste that URL into the
-REM frontend's Settings sheet (gear icon) as the Backend URL — on your phone
+REM frontend's Settings sheet (gear icon) as the Backend URL - on your phone
 REM too. The URL changes every time this script restarts; for a stable URL,
 REM set up a named tunnel (see README.md, "Remote access").
 REM
