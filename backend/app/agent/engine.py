@@ -197,11 +197,16 @@ async def run_agent(
         collected_tool_calls: list[dict] = []
 
         try:
-            # Pass think=False only for thinking-capable model families — some
-            # Ollama builds reject any `think` value for non-thinking models
-            # like llama3.2. _ThinkStripper below is the safety net either way.
+            # think=True for thinking-capable model families: Ollama then
+            # routes reasoning into the separate message.thinking field (which
+            # we never read) and message.content stays clean. think=False is
+            # NOT reliable — current qwen3 builds ignore the /no_think soft
+            # switch and leak reasoning into content with an orphan </think>
+            # tag. Omit the param entirely for non-thinking models (llama3.2),
+            # which reject any `think` value. _ThinkStripper below remains the
+            # safety net for tag-style leaks.
             think_kwargs = (
-                {"think": False}
+                {"think": True}
                 if config.OLLAMA_MODEL.lower().startswith(("qwen3", "deepseek-r1"))
                 else {}
             )
