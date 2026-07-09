@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import config
-from .routers import emails, gmail, status, sync
+from .routers import chat, emails, gmail, status, sync
 
 
 def create_app() -> FastAPI:
@@ -29,8 +29,7 @@ def create_app() -> FastAPI:
     app.include_router(gmail.router)
     app.include_router(sync.router)
     app.include_router(emails.router)
-
-    # TODO(Phase 3): app.include_router(chat.router)   — agent engine + SSE chat + confirmation store
+    app.include_router(chat.router)
 
     return app
 
