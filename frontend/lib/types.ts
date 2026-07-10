@@ -36,6 +36,8 @@ export interface ConnectResponse {
   connected: boolean;
   email: string;
   needs_desktop_auth: boolean;
+  /** Web-flow consent URL; the frontend opens it in a new tab. */
+  auth_url: string;
 }
 
 export interface LabelOut {

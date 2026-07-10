@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
-import { getApiUrl } from "@/lib/settings";
 import type { ConnectResponse, StatusResponse } from "@/lib/types";
 
 const POLL_INTERVAL_MS = 15_000;
@@ -79,6 +78,9 @@ export default function ConnectionCard() {
     try {
       const res = await apiFetch<ConnectResponse>("/api/gmail/connect", { method: "POST" });
       if (res.needs_desktop_auth) {
+        // Web-flow consent URL comes back from the backend (a cloud host has
+        // no display to open a browser itself); open it in a new tab here.
+        if (res.auth_url) window.open(res.auth_url, "_blank", "noopener");
         setAwaitingDesktopAuth(true);
       } else {
         await refresh();
@@ -117,7 +119,7 @@ export default function ConnectionCard() {
       <section className="rounded-xl border border-red-900/50 bg-red-950/30 p-4">
         <p className="text-sm font-medium text-red-300">Backend unreachable</p>
         <p className="mt-1 text-sm text-red-300/80">{state.detail}</p>
-        <p className="mt-1 text-xs text-red-300/60">Currently pointed at {getApiUrl()} — check Settings.</p>
+        <p className="mt-1 text-xs text-red-300/60">Is the server running? Try start.bat.</p>
         <button
           type="button"
           onClick={() => refresh()}

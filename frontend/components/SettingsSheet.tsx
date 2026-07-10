@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api";
-import { getApiToken, getApiUrl, setApiToken, setApiUrl } from "@/lib/settings";
+import { getApiToken, setApiToken } from "@/lib/settings";
 import type { StatusResponse } from "@/lib/types";
 import { CloseIcon } from "./icons";
 
@@ -18,7 +18,6 @@ type TestState =
   | { kind: "error"; detail: string };
 
 export default function SettingsSheet({ open, onClose }: Props) {
-  const [url, setUrl] = useState("");
   const [token, setToken] = useState("");
   const [test, setTest] = useState<TestState>({ kind: "idle" });
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -28,7 +27,6 @@ export default function SettingsSheet({ open, onClose }: Props) {
     if (!open) return;
     // Re-hydrate from localStorage (an external system) each time the sheet opens.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUrl(getApiUrl());
     setToken(getApiToken());
     setTest({ kind: "idle" });
     setSavedAt(null);
@@ -37,7 +35,6 @@ export default function SettingsSheet({ open, onClose }: Props) {
   if (!open) return null;
 
   function persist() {
-    setApiUrl(url.trim() || "http://localhost:8000");
     setApiToken(token.trim());
   }
 
@@ -99,20 +96,6 @@ export default function SettingsSheet({ open, onClose }: Props) {
         </div>
 
         <label className="flex flex-col gap-1 text-sm text-slate-300">
-          Backend URL
-          <input
-            type="url"
-            inputMode="url"
-            autoComplete="off"
-            spellCheck={false}
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="http://localhost:8000"
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-indigo-500"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm text-slate-300">
           API token
           <input
             type="password"
@@ -148,10 +131,9 @@ export default function SettingsSheet({ open, onClose }: Props) {
         {test.kind === "error" && <p className="text-sm text-red-400">{test.detail}</p>}
 
         <p className="mt-auto text-xs leading-relaxed text-slate-500">
-          Stored only in this browser (localStorage) and takes priority over the
-          NEXT_PUBLIC_API_URL / NEXT_PUBLIC_API_TOKEN values baked into the build — useful for
-          pointing a deployed frontend at a fresh Cloudflare quick-tunnel URL without redeploying.
-          Prefer entering the token here per-device rather than baking it into a public build.
+          The token is stored only in this browser (localStorage) and sent as a
+          Bearer header on every request. Find it in backend/.env on the machine
+          running the server — enter it once per device.
         </p>
       </div>
     </div>

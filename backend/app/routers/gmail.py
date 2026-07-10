@@ -15,7 +15,6 @@ import logging
 import os
 import secrets as _secrets
 import threading
-import webbrowser
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi import status as http_status
@@ -59,6 +58,10 @@ def _client_type() -> str:
 
 
 def _web_redirect_uri() -> str:
+    # Cloud hosting: PUBLIC_URL wins (register {PUBLIC_URL}/auth/callback in
+    # Google Cloud Console). Locally: the client's first registered URI.
+    if config.PUBLIC_URL:
+        return config.PUBLIC_URL + "/auth/callback"
     data = json.loads(config.CREDENTIALS_FILE.read_text())
     uris = data.get("web", {}).get("redirect_uris", [])
     if not uris:
@@ -73,9 +76,10 @@ def _web_redirect_uri() -> str:
     return uris[0]
 
 
-def _start_web_flow() -> None:
-    """Open the Google consent page for a web-type client; the backend's own
-    /auth/callback route finishes the exchange."""
+def _start_web_flow() -> str:
+    """Build the Google consent URL for a web-type client and return it; the
+    backend's own /auth/callback route finishes the exchange. The browser is
+    opened by the FRONTEND (window.open) — a cloud host has no display."""
     redirect_uri = _web_redirect_uri()
     flow = Flow.from_client_secrets_file(
         str(config.CREDENTIALS_FILE), scopes=config.GMAIL_SCOPES, redirect_uri=redirect_uri
@@ -86,7 +90,7 @@ def _start_web_flow() -> None:
     )
     _web_flow_state["state"] = state
     _web_flow_state["flow"] = flow
-    webbrowser.open(auth_url)
+    return auth_url
 
 
 def _run_installed_oauth(client) -> None:
@@ -131,8 +135,10 @@ async def connect() -> ConnectResponse:
         return ConnectResponse(connected=True, email=client.user_email, needs_desktop_auth=False)
 
     if _client_type() == "web":
-        await asyncio.to_thread(_start_web_flow)
-        return ConnectResponse(connected=False, email="", needs_desktop_auth=True)
+        auth_url = await asyncio.to_thread(_start_web_flow)
+        return ConnectResponse(
+            connected=False, email="", needs_desktop_auth=True, auth_url=auth_url
+        )
 
     with _oauth_flow_lock:
         if not _oauth_flow_running:

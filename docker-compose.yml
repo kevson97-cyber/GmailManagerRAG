@@ -1,0 +1,29 @@
+# docker compose up --build
+# First run: docker compose exec ollama ollama pull qwen3:4b
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - API_TOKEN=${API_TOKEN:?set API_TOKEN in a .env file next to this compose file}
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3:4b}
+      # For cloud hosting set PUBLIC_URL=https://your-host and register
+      # https://your-host/auth/callback in Google Cloud Console.
+      - PUBLIC_URL=${PUBLIC_URL:-}
+    volumes:
+      - ./backend/chroma_db:/app/chroma_db
+      - ./backend/credentials:/app/credentials
+      - onnx-cache:/root/.cache/chroma # keep the 80MB embedding model across restarts
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama
+    volumes:
+      - ollama-models:/root/.ollama
+
+volumes:
+  ollama-models:
+  onnx-cache:

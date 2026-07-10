@@ -36,6 +36,8 @@ class ConnectResponse(BaseModel):
     connected: bool
     email: str = ""
     needs_desktop_auth: bool = False
+    # Web-flow consent URL; the frontend opens it (a cloud host has no display)
+    auth_url: str = ""
 
 
 class LabelOut(BaseModel):

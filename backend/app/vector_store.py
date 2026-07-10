@@ -1,15 +1,20 @@
 """
 vector_store.py — ChromaDB-backed persistent vector store for Gmail emails.
 
-Uses sentence-transformers (all-MiniLM-L6-v2) for local, free embeddings.
+Embeddings come from chromadb's bundled ONNX all-MiniLM-L6-v2 (onnxruntime is
+already a chromadb dependency) — same model sentence-transformers served, at a
+fraction of the install size. Embeddings are computed explicitly and passed to
+add()/query(); do NOT hand an embedding_function to get_or_create_collection —
+chromadb raises an EF-conflict error against the existing collection, whose
+persisted embedding-function name is "default".
 """
 import json
 from typing import Callable, Optional
 
 import chromadb
-from sentence_transformers import SentenceTransformer
+from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2
 
-from .config import CHROMA_DIR, CHROMA_COLLECTION_NAME, EMBEDDING_MODEL
+from .config import CHROMA_DIR, CHROMA_COLLECTION_NAME
 
 
 class EmailVectorStore:
@@ -21,19 +26,15 @@ class EmailVectorStore:
             name=CHROMA_COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"},
         )
-        self._model: Optional[SentenceTransformer] = None
+        self._ef: Optional[ONNXMiniLM_L6_V2] = None
 
     # ── Embedding ─────────────────────────────────────────────────────────────
 
-    @property
-    def model(self) -> SentenceTransformer:
-        """Lazy-load the embedding model (downloads once, then cached)."""
-        if self._model is None:
-            self._model = SentenceTransformer(EMBEDDING_MODEL)
-        return self._model
-
     def _embed(self, texts: list[str]) -> list[list[float]]:
-        return self.model.encode(texts, show_progress_bar=False).tolist()
+        if self._ef is None:
+            # Lazy: first call downloads the ~80MB ONNX model to ~/.cache/chroma
+            self._ef = ONNXMiniLM_L6_V2()
+        return [e.tolist() for e in self._ef(texts)]
 
     # ── Write ─────────────────────────────────────────────────────────────────
 

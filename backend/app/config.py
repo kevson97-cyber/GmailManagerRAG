@@ -36,11 +36,18 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:4b")
 # ── ChromaDB ─────────────────────────────────────────────────────────────────
 CHROMA_COLLECTION_NAME = "gmail_emails"  # do not change — existing index compatibility
 
-# ── Embeddings (local, free) ─────────────────────────────────────────────────
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-
 # ── Sync settings ─────────────────────────────────────────────────────────────
 MAX_EMAILS_PER_SYNC = int(os.getenv("MAX_EMAILS_PER_SYNC", "500"))
+
+# ── Static frontend ───────────────────────────────────────────────────────────
+# The built Next.js static export the backend serves at "/". Overridden in the
+# Docker image (STATIC_DIR=/app/static); absent dir = API-only mode.
+STATIC_DIR = Path(os.getenv("STATIC_DIR", str(BASE_DIR.parent / "frontend" / "out")))
+
+# ── Public URL (cloud hosting) ────────────────────────────────────────────────
+# When set (e.g. https://myapp.fly.dev), the Gmail OAuth redirect becomes
+# {PUBLIC_URL}/auth/callback — register that URI in Google Cloud Console.
+PUBLIC_URL = os.getenv("PUBLIC_URL", "").rstrip("/")
 
 # ── API auth ──────────────────────────────────────────────────────────────────
 # Bearer token required on every route except /api/health. Must be set in

@@ -1,140 +1,103 @@
 # GmailManagerRAG
 
-A local-first Gmail assistant. Your email index, Gmail credentials, and AI model all stay on **your PC** — nothing is sent to a paid API. A mobile-friendly web UI (deployable to Vercel) connects back to your PC through a free Cloudflare Tunnel.
+A local-first Gmail assistant, served by **one server**. FastAPI hosts both the API and the built web UI on port 8000; your email index (ChromaDB + ONNX MiniLM embeddings), Gmail OAuth token, and AI model (local Ollama) never leave the machine it runs on. No paid APIs.
 
-```
-┌─────────────┐  HTTPS   ┌───────────────────┐        ┌──────────────────────────┐
-│ Phone /     │ ───────► │ Cloudflare Tunnel │ ─────► │ Your PC                  │
-│ browser     │          │ (free)            │        │  FastAPI backend :8000   │
-│ (Next.js UI │          └───────────────────┘        │  ├─ Gmail API (OAuth)    │
-│  on Vercel) │                                       │  ├─ ChromaDB index       │
-└─────────────┘                                       │  └─ Ollama (qwen3:4b)    │
-                                                      └──────────────────────────┘
-```
+**Two pages:** **Sync & Index** (connect Gmail, sync into a local semantic index, browse every email by subject/sender/recipient/date/labels with search/filter/sort) and **Assistant** (typed or voice chat with a tool-calling agent — search, count, summarize, label, filter, trash; every destructive action shows a preview and requires your confirmation).
 
-**Two pages:**
+## Quick start
 
-- **Sync & Index** — connect Gmail, sync emails into a local semantic index (ChromaDB + sentence-transformers), and browse every indexed email by subject, sender, recipient, date, labels, and snippet with search/filter/sort.
-- **Assistant** — chat (typed or voice) with a local Ollama agent that uses **real tool calling**: search your emails semantically, count/rank senders, summarize, create labels and filters, and trash emails — every destructive action shows a preview and requires your explicit confirmation first.
-
----
-
-## Quick start (after one-time setup below)
-
-Double-click **`start.bat`** in the repo root. It starts Ollama (if needed), the backend, and the frontend in their own windows, then opens the app in your browser. `start.bat tunnel` also starts the Cloudflare tunnel for phone access.
-
-## Requirements
-
-- Windows PC (the backend runs here; macOS/Linux work too, just translate the `.bat` scripts)
-- Python 3.10+
-- Node.js 20+ (only to run or deploy the frontend)
-- [Ollama](https://ollama.com) installed and running
-- A Google Cloud OAuth client (Desktop app) — `credentials.json`
-
-## 1. Backend setup (on your PC)
+**One command** (installs everything on first run, then starts the app):
 
 ```bat
-cd backend
-copy .env.example .env
+start.bat
 ```
 
-Edit `backend/.env`:
+That creates the Python venv, installs dependencies, generates `backend/.env` with a fresh API token (printed in the console), builds the web UI, checks Ollama, starts the server, and opens http://localhost:8000. Paste the printed token into the app's Settings (gear icon) once per device.
 
-- `API_TOKEN` — generate one: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
-- `ALLOWED_ORIGINS` — keep `http://localhost:3000`; add your Vercel URL later (comma-separated).
+Variants: `start.bat rebuild` (force-rebuild the UI after frontend changes) · `start.bat tunnel` (also opens a Cloudflare quick tunnel — see Phone access).
 
-Pull the model (~2.6 GB, one time):
+### Requirements
+
+- Python 3.10+, Node.js 20+
+- [Ollama](https://ollama.com) with the model pulled once: `ollama pull qwen3:4b` (~2.6 GB; alternatives via `OLLAMA_MODEL` in `backend/.env`)
+- A Google OAuth client (below)
+
+### Google OAuth setup (one time)
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → enable the **Gmail API** → Credentials → Create OAuth client ID.
+2. Either client type works:
+   - **Desktop app** — no redirect config needed, or
+   - **Web application** — add `http://localhost:8000/auth/callback` to Authorized redirect URIs.
+3. Download the JSON to `backend/credentials/credentials.json`.
+4. In the app, click **Connect Gmail** — a Google consent tab opens; approve it and you're connected.
+
+## Phone access
 
 ```bat
-ollama pull qwen3:4b
+start.bat tunnel
 ```
 
-> `qwen3:4b` is the recommended default — the most reliable small model at tool calling.
-> Alternatives via `OLLAMA_MODEL` in `.env`: `llama3.2:3b` (smaller/weaker) or `llama3.1:8b` (better, needs ≥12 GB RAM).
+Copy the printed `https://<random>.trycloudflare.com` URL and open it on your phone — the tunnel serves the **whole app** (UI + API, same origin), so the only setup on the phone is pasting the API token into Settings. The URL changes each time the tunnel restarts. Voice input works in mobile Chrome/Safari (HTTPS via the tunnel).
 
-Add your Google OAuth client:
+Requires `winget install Cloudflare.cloudflared` once. Anyone with the URL **and** your token can read/trash your email — treat the token like a password.
 
-1. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → Create OAuth client ID → **Desktop app** (simplest), or a **Web application** client with `http://localhost:8000/auth/callback` in its authorized redirect URIs — the backend supports both.
-2. Enable the **Gmail API** for the project.
-3. Download the JSON and save it as `backend/credentials/credentials.json`.
+## Cloud hosting (scale-to-zero)
 
-Start the backend:
+The repo ships a multi-stage `Dockerfile` (Node builds the UI → Python image serves everything) and a `docker-compose.yml` with an Ollama service:
 
-```bat
-run_backend.bat
+```bash
+API_TOKEN=<your-token> docker compose up --build
+docker compose exec ollama ollama pull qwen3:4b   # first run
 ```
 
-First run creates a venv and installs dependencies (the embedding model downloads on first sync). The API is then at `http://127.0.0.1:8000`.
+For "the app starts automatically when a client connects," deploy the container to a scale-to-zero platform:
 
-## 2. Frontend (local)
+- **Fly.io** — `auto_stop_machines = true`, `min_machines_running = 0`: the machine stops when idle and cold-starts on the next request.
+- **Google Cloud Run** — `--min-instances=0` does the same.
 
-```bat
-cd frontend
-copy .env.local.example .env.local
-npm install
-npm run dev
-```
+Honest constraints before you do this:
 
-Open http://localhost:3000, click the **gear icon**, and enter your `API_TOKEN`. Then on the Sync page click **Connect Gmail** — a Google consent window opens on the PC; approve it and the status card flips to connected. Run a sync and start chatting.
+- **RAM**: qwen3:4b needs ~5 GB for the Ollama container — that's the expensive part. Options: a smaller model, a GPU host, or keep Ollama on your PC and point `OLLAMA_HOST` at a tunnel to it.
+- **Cold starts** are tens of seconds (model load) after idle.
+- **Persistence**: `chroma_db/` and `credentials/` must live on a volume, as in the compose file.
+- **OAuth**: register `https://<your-host>/auth/callback` in Google Cloud Console and set `PUBLIC_URL=https://<your-host>` — the consent tab then opens from your browser wherever you are.
+- The UI itself is public at the URL; all data routes still require the bearer token.
 
-## 3. Mobile / remote access
+## Configuration (`backend/.env`)
 
-The backend never leaves your PC — your phone reaches it through a tunnel.
-
-**Quick tunnel (no account, URL changes each run):**
-
-```bat
-winget install Cloudflare.cloudflared
-cd backend
-run_tunnel.bat
-```
-
-Copy the printed `https://<random>.trycloudflare.com` URL.
-
-**Deploy the UI to Vercel (one time):**
-
-1. Push this repo to GitHub and import it at [vercel.com](https://vercel.com).
-2. Set **Root Directory = `frontend`** (framework auto-detects Next.js). Deploy.
-3. Add your Vercel URL (e.g. `https://yourapp.vercel.app`) to `ALLOWED_ORIGINS` in `backend/.env` and restart the backend.
-
-**On your phone:** open the Vercel URL → gear icon → paste the tunnel URL as Backend URL + your API token → save. Voice input works in mobile Chrome/Safari (HTTPS via Vercel satisfies the mic requirement).
-
-> **Stable URL (optional):** quick-tunnel URLs rotate on every restart. With a free Cloudflare account and a domain you can create a *named tunnel* (`cloudflared tunnel login` → `create` → `route dns` → `run`), then set `NEXT_PUBLIC_API_URL` permanently in Vercel. See [Cloudflare's docs](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/).
-
-### Security model — read this
-
-- Every API route (except a bare health check) requires `Authorization: Bearer <API_TOKEN>`; requests without it get 401. The backend refuses to serve at all if `API_TOKEN` is unset.
-- **Leave `NEXT_PUBLIC_API_TOKEN` empty in Vercel.** Anything `NEXT_PUBLIC_` is baked into public JavaScript. Enter the token once per device in the Settings sheet instead (stored in that browser's localStorage only).
-- Anyone with both the tunnel URL **and** the token can read/trash your email — treat the token like a password.
-- Google sign-in only ever happens in a browser **on the PC**. If the token expires while you're remote, the app shows "finish sign-in on your PC".
-- Trashed emails go to Gmail's Trash and are recoverable for 30 days.
-- Voice input uses the browser's speech engine (in Chrome, audio is processed by Google's speech service).
+| Var | Default | Purpose |
+|---|---|---|
+| `API_TOKEN` | generated by start.bat | Bearer token required on every API route (server refuses to run without it) |
+| `OLLAMA_MODEL` | `qwen3:4b` | Any tool-calling Ollama model (`llama3.1:8b` for better quality, ≥12 GB RAM) |
+| `OLLAMA_HOST` | `http://localhost:11434` | Where Ollama runs |
+| `MAX_EMAILS_PER_SYNC` | `500` | Sync batch cap |
+| `PUBLIC_URL` | *(empty)* | Cloud only: your public https origin for the OAuth redirect |
+| `ALLOWED_ORIGINS` | `http://localhost:3000` | Dev only: lets `npm run dev` call the API cross-origin |
 
 ## Agent capabilities
 
-Read-only (no confirmation): `search_emails`, `get_emails_by_sender`, `get_emails_by_label`, `count_emails`, `get_inbox_stats`, `get_top_senders`, `list_labels`, `summarize_sender`.
-
-Destructive (always previewed + confirmed by you in the UI, never auto-executed): `trash_emails`, `create_label`, `apply_label`, `create_filter`.
-
-Try: *"What subscriptions email me the most?"*, *"Summarize my emails from chess.com"*, *"Trash all my promotions emails"* (you'll get a preview + confirm card).
+Read-only: `search_emails`, `get_emails_by_sender`, `get_emails_by_label`, `count_emails`, `get_inbox_stats`, `get_top_senders`, `list_labels`, `summarize_sender`. Destructive (always previewed + confirmed in the UI): `trash_emails`, `create_label`, `apply_label`, `create_filter`. Trashed mail is recoverable from Gmail Trash for 30 days.
 
 ## Repo layout
 
 ```
-backend/   FastAPI server — Gmail OAuth, ChromaDB index, Ollama agent (SSE APIs)
-  app/routers/   status, gmail, sync, emails, chat endpoints
-  app/agent/     tool schemas/executors, streaming agent loop, prompts
-  run_backend.bat / run_tunnel.bat
-frontend/  Next.js 16 app — /sync and /assistant pages (all client components)
+start.bat            one-command setup + run
+Dockerfile           multi-stage build (UI + API in one image)
+docker-compose.yml   app + Ollama services
+backend/app/         FastAPI: routers/, agent/ (tools + loop), vector_store, gmail_client
+frontend/            Next.js static export (output: "export"), served by the backend
 ```
+
+Dev mode: run `uvicorn app.main:app --app-dir backend --port 8000` and `npm run dev` in `frontend/` for hot reload on :3000 (CORS is preconfigured).
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Status card: "Ollama not running" | `ollama serve` (or launch the Ollama app) |
-| Status card: model not found | `ollama pull qwen3:4b` |
-| 401 in the UI | Token in Settings doesn't match `API_TOKEN` in `backend/.env` |
-| Phone can't reach backend | Tunnel restarted → new URL; re-paste it in Settings |
-| CORS error in browser console | Add the frontend's origin to `ALLOWED_ORIGINS` and restart the backend |
-| "Finish sign-in on your PC" persists | Complete the Google consent window at the PC, or delete `backend/credentials/token.json` and reconnect |
+| "Ollama not running" on the status card | `ollama serve` (or launch the Ollama app) |
+| Model not found | `ollama pull qwen3:4b` |
+| 401 in the UI | Token in Settings must match `API_TOKEN` in `backend/.env` |
+| UI looks stale after changing frontend code | `start.bat rebuild` |
+| Search results seem off after upgrading | Sync page → Clear index → Sync (re-embeds with the current model) |
+| Port 8000 busy | Stop the other process or set `--port` in start.bat |
+| Phone can't reach the app | Tunnel restarted → new URL; re-open the new one |

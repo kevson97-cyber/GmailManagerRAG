@@ -1,7 +1,7 @@
 /**
- * api.ts — single choke point for every backend call. Prepends the
- * user-configured backend URL (lib/settings.ts) and always sends the API
- * token in the `Authorization` header — never in a query string or URL, so
+ * api.ts — single choke point for every backend call. Same-origin relative
+ * URLs in the built app (the backend serves this UI); the API token always
+ * travels in the `Authorization` header — never in a query string or URL, so
  * it never ends up in browser history, proxy logs, or a Cloudflare Tunnel
  * access log.
  *
@@ -67,10 +67,7 @@ function isJsonBody(init: RequestInit | undefined): boolean {
 }
 
 function networkError(): ApiError {
-  return new ApiError(
-    0,
-    `Could not reach the backend at ${getApiUrl()}. Check that it is running and that the URL in Settings is correct.`
-  );
+  return new ApiError(0, "Could not reach the backend. Is the server running?");
 }
 
 /** JSON request/response. Throws ApiError on network failure or non-2xx status. */

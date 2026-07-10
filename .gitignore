@@ -3,7 +3,6 @@ backend/.env
 backend/.env.bak
 backend/credentials/credentials.json
 backend/credentials/token.json
-frontend/.env.local
 
 # ── Generated data ────────────────────────────────────────────────────────
 backend/chroma_db/
@@ -21,7 +20,6 @@ venv/
 frontend/node_modules/
 frontend/.next/
 frontend/out/
-frontend/.vercel/
 frontend/next-env.d.ts
 
 # ── OS / editor ───────────────────────────────────────────────────────────
