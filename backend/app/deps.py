@@ -17,6 +17,7 @@ from googleapiclient.discovery import build
 
 from . import config
 from .gmail_client import GmailClient
+from .routines import GenericLabelRoutine
 from .sync_manager import SyncManager
 from .vector_store import EmailVectorStore
 
@@ -104,3 +105,19 @@ def get_sync_manager() -> SyncManager:
             if _sync_manager is None:
                 _sync_manager = SyncManager(get_gmail, get_vector_store)
     return _sync_manager
+
+
+# ── GenericLabelRoutine singleton ─────────────────────────────────────────────
+
+_routine_lock = threading.Lock()
+_generic_routine: GenericLabelRoutine | None = None
+
+
+def get_generic_routine() -> GenericLabelRoutine:
+    """Return the process-wide Generic-labeling routine, creating it on first use."""
+    global _generic_routine
+    if _generic_routine is None:
+        with _routine_lock:
+            if _generic_routine is None:
+                _generic_routine = GenericLabelRoutine(get_gmail)
+    return _generic_routine

@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import ConnectionCard from "@/components/ConnectionCard";
 import EmailTable from "@/components/EmailTable";
+import RoutinesCard from "@/components/RoutinesCard";
 import SyncControls from "@/components/SyncControls";
 import SyncProgress from "@/components/SyncProgress";
 
@@ -25,6 +26,7 @@ export default function SyncPage() {
       <ConnectionCard />
       <SyncControls onSyncStarted={handleSyncStarted} />
       <SyncProgress streamKey={streamKey} onSyncFinished={handleSyncFinished} />
+      <RoutinesCard />
       <EmailTable refreshKey={syncVersion} />
     </div>
   );

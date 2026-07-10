@@ -121,6 +121,25 @@ export interface ChatRequest {
   cancelled?: boolean;
 }
 
+// ── Routines ────────────────────────────────────────────────────────────────
+
+export interface RoutineLastRun {
+  at: string;
+  trigger: "schedule" | "manual";
+  scanned: number;
+  labeled: number;
+  skipped: number;
+  errors: string[];
+  duration_seconds: number;
+}
+
+export interface GenericRoutineStatus {
+  enabled: boolean;
+  interval_minutes: number;
+  running: boolean;
+  last_run: RoutineLastRun | null;
+}
+
 // engine.py event contract: (event_name, data) pairs, mapped 1:1 onto SSE frames.
 export interface ChatTokenEvent {
   text: string;

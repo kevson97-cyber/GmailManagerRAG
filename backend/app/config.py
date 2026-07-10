@@ -44,6 +44,16 @@ MAX_EMAILS_PER_SYNC = int(os.getenv("MAX_EMAILS_PER_SYNC", "500"))
 # Docker image (STATIC_DIR=/app/static); absent dir = API-only mode.
 STATIC_DIR = Path(os.getenv("STATIC_DIR", str(BASE_DIR.parent / "frontend" / "out")))
 
+# ── Generic-labeling routine ──────────────────────────────────────────────────
+# Background routine that labels unimportant/generic inbox mail with a custom
+# Gmail label. 0 minutes disables the schedule (manual runs still work).
+ROUTINE_INTERVAL_MINUTES = int(os.getenv("ROUTINE_INTERVAL_MINUTES", "30"))
+ROUTINE_LOOKBACK_DAYS = int(os.getenv("ROUTINE_LOOKBACK_DAYS", "2"))
+ROUTINE_MAX_EMAILS_PER_RUN = int(os.getenv("ROUTINE_MAX_EMAILS_PER_RUN", "50"))
+ROUTINE_BATCH_SIZE = int(os.getenv("ROUTINE_BATCH_SIZE", "8"))
+GENERIC_LABEL_NAME = "Generic"
+ROUTINE_STATE_FILE = BASE_DIR / "routine_state.json"
+
 # ── Public URL (cloud hosting) ────────────────────────────────────────────────
 # When set (e.g. https://myapp.fly.dev), the Gmail OAuth redirect becomes
 # {PUBLIC_URL}/auth/callback — register that URI in Google Cloud Console.

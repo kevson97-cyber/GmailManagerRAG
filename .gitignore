@@ -6,6 +6,7 @@ backend/credentials/token.json
 
 # ── Generated data ────────────────────────────────────────────────────────
 backend/chroma_db/
+backend/routine_state.json
 *.log
 
 # ── Python ────────────────────────────────────────────────────────────────

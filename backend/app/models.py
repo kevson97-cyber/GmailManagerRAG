@@ -81,6 +81,29 @@ class StatsResponse(BaseModel):
     top_senders: list[tuple[str, int]]
 
 
+# ── Routines ──────────────────────────────────────────────────────────────────
+
+class RoutineLastRun(BaseModel):
+    at: str
+    trigger: str  # "schedule" | "manual"
+    scanned: int
+    labeled: int
+    skipped: int
+    errors: list[str] = Field(default_factory=list)
+    duration_seconds: float
+
+
+class GenericRoutineStatus(BaseModel):
+    enabled: bool
+    interval_minutes: int
+    running: bool
+    last_run: RoutineLastRun | None = None
+
+
+class RoutineRunResponse(BaseModel):
+    started: bool
+
+
 # ── Chat / agent (Phase 3) ────────────────────────────────────────────────────
 
 class ChatMessage(BaseModel):

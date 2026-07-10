@@ -74,6 +74,15 @@ Honest constraints before you do this:
 | `PUBLIC_URL` | *(empty)* | Cloud only: your public https origin for the OAuth redirect |
 | `ALLOWED_ORIGINS` | `http://localhost:3000` | Dev only: lets `npm run dev` call the API cross-origin |
 
+## Generic labeling routine
+
+While the server runs, a background routine scans the inbox every 30 minutes (and via **Run now** on the Sync page) and applies a **Generic** Gmail label to skippable mail — promotions, marketing, newsletters, digests, and similar. It deliberately **never** labels personal mail, work/business mail, financial mail (bills, statements), anything needing action, or transactional notifications (shipping updates, order confirmations, security codes). When the model is unsure, it labels nothing.
+
+- Tune via `backend/.env`: `ROUTINE_INTERVAL_MINUTES` (0 disables auto-run), `ROUTINE_LOOKBACK_DAYS` (default 2), `ROUTINE_MAX_EMAILS_PER_RUN` (default 50).
+- Non-generic verdicts are remembered in `backend/routine_state.json` so mail isn't re-classified every pass. If you remove the Generic label from a message by hand, a future run may re-label it.
+- Index note: freshly labeled emails show the new label in the browser after the next sync.
+- Scale-to-zero hosting: the schedule only fires while the server is awake — on such hosts the routine effectively runs on wake and via Run now.
+
 ## Agent capabilities
 
 Read-only: `search_emails`, `get_emails_by_sender`, `get_emails_by_label`, `count_emails`, `get_inbox_stats`, `get_top_senders`, `list_labels`, `summarize_sender`. Destructive (always previewed + confirmed in the UI): `trash_emails`, `create_label`, `apply_label`, `create_filter`. Trashed mail is recoverable from Gmail Trash for 30 days.
