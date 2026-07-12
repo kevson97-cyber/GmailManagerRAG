@@ -208,11 +208,3 @@ async def list_labels() -> list[LabelOut]:
         LabelOut(id=label.get("id", ""), name=label.get("name", ""), type=label.get("type", ""))
         for label in raw
     ]
-
-
-@router.get("/filters")
-async def list_filters() -> list[dict]:
-    client = await asyncio.to_thread(deps.get_gmail)
-    if not client.is_authenticated():
-        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="Gmail is not connected")
-    return await asyncio.to_thread(client.get_filters)

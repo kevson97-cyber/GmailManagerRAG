@@ -2,7 +2,6 @@
 gmail_client.py — Gmail API wrapper for reading, labelling, and filtering emails.
 """
 import base64
-import json
 import re
 from typing import Optional
 
@@ -253,17 +252,6 @@ class GmailClient:
         return trashed, errors
 
     # ── Filters ───────────────────────────────────────────────────────────────
-
-    def get_filters(self) -> list[dict]:
-        self._require_auth()
-        return (
-            self.service.users()
-            .settings()
-            .filters()
-            .list(userId="me")
-            .execute()
-            .get("filter", [])
-        )
 
     def create_filter(self, criteria: dict, action: dict) -> dict:
         """

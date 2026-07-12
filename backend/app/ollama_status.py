@@ -7,6 +7,20 @@ import ollama
 
 from . import config
 
+# Model families whose Ollama build routes reasoning into a separate
+# message.thinking field when think=True is passed — for other families
+# (e.g. llama3.2) the param is either ignored or rejected outright, so it
+# must be omitted entirely rather than passed as False.
+_THINKING_MODEL_PREFIXES = ("qwen3", "deepseek-r1")
+
+
+def think_kwargs() -> dict:
+    """kwargs to pass to ollama.chat()/AsyncClient.chat() for the configured
+    model: {"think": True} for thinking-capable families, {} otherwise."""
+    if config.OLLAMA_MODEL.lower().startswith(_THINKING_MODEL_PREFIXES):
+        return {"think": True}
+    return {}
+
 
 def is_available() -> tuple[bool, str]:
     """

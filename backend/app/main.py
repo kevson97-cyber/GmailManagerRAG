@@ -2,7 +2,7 @@
 main.py — FastAPI application factory and ASGI entrypoint.
 
 Run with:  python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-(see run_backend.bat).
+(see start.bat, or the Dockerfile for the containerized entrypoint).
 """
 import asyncio
 from contextlib import asynccontextmanager

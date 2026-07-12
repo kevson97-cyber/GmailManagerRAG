@@ -65,7 +65,8 @@ PUBLIC_URL = os.getenv("PUBLIC_URL", "").rstrip("/")
 API_TOKEN = os.getenv("API_TOKEN", "")
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
-# Comma-separated list of allowed origins, e.g. "http://localhost:3000,https://myapp.vercel.app"
+# Comma-separated list of allowed origins. Only needed for `npm run dev` on
+# :3000 — the production build is served same-origin by this backend.
 ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")

@@ -205,17 +205,12 @@ async def run_agent(
             # tag. Omit the param entirely for non-thinking models (llama3.2),
             # which reject any `think` value. _ThinkStripper below remains the
             # safety net for tag-style leaks.
-            think_kwargs = (
-                {"think": True}
-                if config.OLLAMA_MODEL.lower().startswith(("qwen3", "deepseek-r1"))
-                else {}
-            )
             stream = await client.chat(
                 model=config.OLLAMA_MODEL,
                 messages=chat_messages,
                 tools=tools.TOOL_SCHEMAS,
                 stream=True,
-                **think_kwargs,
+                **ollama_status.think_kwargs(),
             )
             async for chunk in stream:
                 msg = chunk.message

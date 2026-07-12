@@ -59,14 +59,6 @@ notifications (shipping, order confirmations, security codes, alerts) are \
 NOT generic."""
 
 
-def _think_kwargs() -> dict:
-    """Same gating as agent/engine.py: think=True only for thinking-capable
-    families, so reasoning lands in message.thinking, not content."""
-    if config.OLLAMA_MODEL.lower().startswith(("qwen3", "deepseek-r1")):
-        return {"think": True}
-    return {}
-
-
 def _strip_think(text: str) -> str:
     return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
 
@@ -138,7 +130,7 @@ class GenericLabelRoutine:
             response = await client.chat(
                 model=config.OLLAMA_MODEL,
                 messages=[{"role": "user", "content": prompt}],
-                **_think_kwargs(),
+                **ollama_status.think_kwargs(),
             )
             content = _strip_think(response.message.content or "")
             verdicts = self._parse_verdicts(content, len(batch))
